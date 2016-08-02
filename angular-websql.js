@@ -43,6 +43,52 @@ angular.module("angular-websql", []).factory("$webSql", ["$q",
 								"{values}": b
 							}), v);
 						},
+						insertMultiple: function(c, e, r) {
+							var f = (typeof r === "boolean" && r) ? "INSERT OR REPLACE" : "INSERT";
+							f += " INTO `{tableName}` ({fields}) VALUES({values});";
+							var a = "",
+							b = "",
+							v = [];
+                                                        var max=50;
+                                                        var nb=e.length;
+                                                        if(nb>max){
+                                                            var tranche=e.slice(0,max);
+                                                            this.insertMultiple(c,e.slice(max,nb),nb-max);
+                                                            e=tranche;
+                                                            nb=e.length;
+                                                        }
+                                                        for(var i=0;i<nb;i++){
+                                                            for (var d in e[i]) {
+                                                                    if(i==0){
+                                                                         a += (Object.keys(e[i])[Object.keys(e[i]).length - 1] == d) ? "`" + d + "`" : "`" + d + "`, ";
+                                                                         if (i<nb-1){
+                                                                            b += (Object.keys(e[i])[Object.keys(e[i]).length - 1] == d) ? "?)," : "?, ";
+                                                                         }
+                                                                         else{
+                                                                             b += (Object.keys(e[i])[Object.keys(e[i]).length - 1] == d) ? "?" : "?, ";
+                                                                        }
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        if(Object.keys(e[i])[0] == d){
+                                                                            b+="(?, ";
+                                                                        }else  if (i<nb-1){
+                                                                           b += (Object.keys(e[i])[Object.keys(e[i]).length - 1] == d) ? "?)," : "?, ";
+                                                                        }
+                                                                        else{
+                                                                             b += (Object.keys(e[i])[Object.keys(e[i]).length - 1] == d) ? "?" : "?, ";
+                                                                        }
+                                                                        
+                                                                    }
+                                                                    v.push(e[i][d]);
+                                                            }
+							}
+							return this.executeQuery(this.replace(f, {
+								"{tableName}": c,
+								"{fields}": a,
+								"{values}": b
+							}), v);
+						},
 						update: function(b, g, c) {
 							var f = "UPDATE `{tableName}` SET {update} WHERE {where}; ";
 							var e = "";
